@@ -1,0 +1,443 @@
+// src/main/java/com/curtin/securehire/service/impl/RecruiterServiceImpl.java
+package com.curtin.securehire.service.impl;
+
+import com.curtin.securehire.constant.BusinessSecTor;
+import com.curtin.securehire.constant.CompanyType;
+import com.curtin.securehire.entity.Recruiter;
+import com.curtin.securehire.entity.Job;
+import com.curtin.securehire.exception.BadRequestException;
+import com.curtin.securehire.exception.NotFoundException;
+import com.curtin.securehire.exception.ValidationException;
+import com.curtin.securehire.repository.RecruiterRepository;
+import com.curtin.securehire.repository.JobRepository;
+import com.curtin.securehire.service.RecruiterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class RecruiterServiceImpl implements RecruiterService {
+
+    private static final Logger logger = LoggerFactory.getLogger(RecruiterServiceImpl.class);
+
+    @Autowired
+    private RecruiterRepository recruiterRepository;
+
+    @Autowired
+    private JobRepository jobRepository;
+
+
+    @Override
+    public Recruiter signup(Recruiter recruiter) {
+        return null;
+    }
+
+    @Override
+    public Recruiter login(String email, String password) {
+        Recruiter recruiter = findByEmail(email);
+        if (!verifyPassword(recruiter.getId(), password)) {
+            throw new BadRequestException("Invalid password");
+        }
+        return recruiter;
+    }
+
+    @Override
+    public Recruiter updateProfile(Integer recruiterId, Recruiter recruiter) {
+        logger.info("Updating recruiter profile with ID: {}", recruiterId);
+
+        Optional<Recruiter> recruiterOpt = recruiterRepository.findById(recruiterId);
+        if (recruiterOpt.isEmpty()) {
+            logger.error("Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        Recruiter existingRecruiter = recruiterOpt.get();
+        existingRecruiter.setCompanyName(recruiter.getCompanyName());
+        existingRecruiter.setPhone(recruiter.getPhone());
+        existingRecruiter.setWebsite(recruiter.getWebsite());
+        existingRecruiter.setCompanyType(recruiter.getCompanyType());
+        existingRecruiter.setBusinessSecTor(recruiter.getBusinessSecTor());
+        existingRecruiter.setDescription(recruiter.getDescription());
+        existingRecruiter.setEmail(recruiter.getEmail());
+        existingRecruiter.setNoOfEmployee(recruiter.getNoOfEmployee());
+
+        Recruiter updatedRecruiter = recruiterRepository.save(existingRecruiter);
+        logger.info("Updated recruiter profile with ID: {}", recruiterId);
+        return updatedRecruiter;
+    }
+
+    @Override
+    public Recruiter findById(Integer recruiterId) {
+        logger.info("Finding recruiter by ID: {}", recruiterId);
+
+        Optional<Recruiter> recruiterOpt = recruiterRepository.findById(recruiterId);
+        if (recruiterOpt.isEmpty()) {
+            logger.error("Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        logger.info("Found recruiter with ID: {}", recruiterId);
+        return recruiterOpt.get();
+    }
+
+    @Override
+    public List<Recruiter> findAll() {
+        logger.info("Fetching all recruiters");
+
+        try {
+            List<Recruiter> recruiters = recruiterRepository.findAll();
+            logger.info("Fetched {} recruiters", recruiters.size());
+            return recruiters;
+        } catch (Exception e) {
+            logger.error("Error fetching all recruiters: {}", e.getMessage(), e);
+            throw new BadRequestException("Failed to fetch recruiters: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Recruiter save(Recruiter recruiter) {
+        logger.info("Creating new recruiter: {}", recruiter.getEmail());
+
+        if (recruiter.getEmail() == null || recruiter.getEmail().trim().isEmpty()) {
+            logger.error("Failed to create recruiter: Email is required");
+            throw new ValidationException("Email is required");
+        }
+
+        if (recruiterRepository.existsByEmail(recruiter.getEmail())) {
+            logger.error("Failed to create recruiter: Email already exists");
+            throw new BadRequestException("Email already exists");
+        }
+
+        try {
+            Recruiter savedRecruiter = recruiterRepository.save(recruiter);
+            logger.info("Recruiter created successfully with ID: {}", savedRecruiter.getId());
+            return savedRecruiter;
+        } catch (Exception e) {
+            logger.error("Error creating recruiter: {}", e.getMessage(), e);
+            throw new BadRequestException("Failed to create recruiter: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Recruiter update(Integer recruiterId, Recruiter updatedRecruiter) {
+        logger.info("Updating recruiter with ID: {}", recruiterId);
+
+        Optional<Recruiter> existingRecruiterOpt = recruiterRepository.findById(recruiterId);
+        if (existingRecruiterOpt.isEmpty()) {
+            logger.error("Cannot update recruiter: Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        try {
+            Recruiter existingRecruiter = existingRecruiterOpt.get();
+
+            // Update fields if not null
+            if (updatedRecruiter.getCompanyName() != null) {
+                existingRecruiter.setCompanyName(updatedRecruiter.getCompanyName());
+            }
+
+            if (updatedRecruiter.getPhone() != null) {
+                existingRecruiter.setPhone(updatedRecruiter.getPhone());
+            }
+
+            if (updatedRecruiter.getCompanyType() != null) {
+                existingRecruiter.setCompanyType(updatedRecruiter.getCompanyType());
+            }
+
+            if (updatedRecruiter.getBusinessSecTor() != null) {
+                existingRecruiter.setBusinessSecTor(updatedRecruiter.getBusinessSecTor());
+            }
+
+            if (updatedRecruiter.getNoOfEmployee() != null) {
+                existingRecruiter.setNoOfEmployee(updatedRecruiter.getNoOfEmployee());
+            }
+
+            if (updatedRecruiter.getWebsite() != null) {
+                existingRecruiter.setWebsite(updatedRecruiter.getWebsite());
+            }
+
+            if (updatedRecruiter.getDescription() != null) {
+                existingRecruiter.setDescription(updatedRecruiter.getDescription());
+            }
+
+            // Email update requires additional validation
+            if (updatedRecruiter.getEmail() != null && !updatedRecruiter.getEmail().equals(existingRecruiter.getEmail())) {
+                if (recruiterRepository.existsByEmail(updatedRecruiter.getEmail())) {
+                    logger.error("Cannot update recruiter: Email already exists");
+                    throw new BadRequestException("Email already exists");
+                }
+                existingRecruiter.setEmail(updatedRecruiter.getEmail());
+            }
+
+            Recruiter savedRecruiter = recruiterRepository.save(existingRecruiter);
+            logger.info("Recruiter updated successfully with ID: {}", recruiterId);
+            return savedRecruiter;
+        } catch (Exception e) {
+            logger.error("Error updating recruiter with ID {}: {}", recruiterId, e.getMessage(), e);
+            throw new BadRequestException("Failed to update recruiter: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void delete(Integer recruiterId) {
+        logger.info("Deleting recruiter with ID: {}", recruiterId);
+
+        if (!recruiterRepository.existsById(recruiterId)) {
+            logger.error("Cannot delete recruiter: Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        try {
+            recruiterRepository.deleteById(recruiterId);
+            logger.info("Recruiter deleted successfully with ID: {}", recruiterId);
+        } catch (Exception e) {
+            logger.error("Error deleting recruiter with ID {}: {}", recruiterId, e.getMessage(), e);
+            throw new BadRequestException("Failed to delete recruiter: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Recruiter findByEmail(String email) {
+        logger.info("Finding recruiter by email: {}", email);
+
+        Optional<Recruiter> recruiterOpt = recruiterRepository.findByEmail(email);
+        if (recruiterOpt.isEmpty()) {
+            logger.error("Recruiter not found with email: {}", email);
+            throw new NotFoundException("Recruiter not found with email: " + email);
+        }
+
+        logger.info("Found recruiter with email: {}", email);
+        return recruiterOpt.get();
+    }
+
+    @Override
+    public Recruiter getProfile(Integer recruiterId) {
+        return null;
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return recruiterRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean changePassword(Integer recruiterId, String oldPassword, String newPassword) {
+        return false;
+    }
+
+    @Override
+    public List<Recruiter> findByCompanyName(String companyName) {
+        logger.info("Finding recruiters by company name: {}", companyName);
+
+        try {
+            List<Recruiter> recruiters = recruiterRepository.findByCompanyNameContainingIgnoreCase(companyName);
+            logger.info("Found {} recruiters with company name containing: {}", recruiters.size(), companyName);
+            return recruiters;
+        } catch (Exception e) {
+            logger.error("Error finding recruiters by company name {}: {}", companyName, e.getMessage(), e);
+            throw new BadRequestException("Failed to find recruiters by company name: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Recruiter> findByCompanyType(CompanyType companyType) {
+        logger.info("Finding recruiters by company type: {}", companyType);
+
+        try {
+            List<Recruiter> recruiters = recruiterRepository.findByCompanyType(companyType);
+            logger.info("Found {} recruiters with company type: {}", recruiters.size(), companyType);
+            return recruiters;
+        } catch (Exception e) {
+            logger.error("Error finding recruiters by company type {}: {}", companyType, e.getMessage(), e);
+            throw new BadRequestException("Failed to find recruiters by company type: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Recruiter> findByBusinessSector(BusinessSecTor businessSector) {
+        logger.info("Finding recruiters by business sector: {}", businessSector);
+
+        try {
+            List<Recruiter> recruiters = recruiterRepository.findByBusinessSecTor(businessSector);
+            logger.info("Found {} recruiters in business sector: {}", recruiters.size(), businessSector);
+            return recruiters;
+        } catch (Exception e) {
+            logger.error("Error finding recruiters by business sector {}: {}", businessSector, e.getMessage(), e);
+            throw new BadRequestException("Failed to find recruiters by business sector: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Job> getRecruiterJobs(Integer recruiterId) {
+        logger.info("Fetching jobs for recruiter with ID: {}", recruiterId);
+
+        if (!recruiterRepository.existsById(recruiterId)) {
+            logger.error("Cannot fetch jobs: Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        try {
+            List<Job> jobs = jobRepository.findByRecruiterId(recruiterId);
+            logger.info("Found {} jobs for recruiter with ID: {}", jobs.size(), recruiterId);
+            return jobs;
+        } catch (Exception e) {
+            logger.error("Error fetching jobs for recruiter with ID {}: {}", recruiterId, e.getMessage(), e);
+            throw new BadRequestException("Failed to fetch recruiter jobs: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Post a new job on behalf of the recruiter with the given ID.
+     *
+     * @param recruiterId the ID of the recruiter
+     * @param job         the job to be posted
+     * @return the posted job
+     */
+    @Override
+    public Job postJob(Integer recruiterId, Job job) {
+        logger.info("Posting new job for recruiter with ID: {}", recruiterId);
+
+        Optional<Recruiter> recruiterOpt = recruiterRepository.findById(recruiterId);
+        if (recruiterOpt.isEmpty()) {
+            logger.error("Cannot post job: Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        try {
+            // Set the recruiter who posted the job
+            job.setRecruiter(recruiterOpt.get());
+
+            // Save the job
+            Job savedJob = jobRepository.save(job);
+
+            logger.info("Job posted successfully with ID: {} for recruiter with ID: {}", savedJob.getId(), recruiterId);
+            return savedJob;
+        } catch (Exception e) {
+            logger.error("Error posting job for recruiter with ID {}: {}", recruiterId, e.getMessage(), e);
+            throw new BadRequestException("Failed to post job: " + e.getMessage());
+        }
+    }
+
+
+    @Override
+    public void blockRecruiter(Integer recruiterId, boolean block) {
+        logger.info("{} recruiter with ID: {}", block ? "Blocking" : "Unblocking", recruiterId);
+
+        Optional<Recruiter> recruiterOpt = recruiterRepository.findById(recruiterId);
+        if (recruiterOpt.isEmpty()) {
+            logger.error("Cannot update block status: Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        try {
+            Recruiter recruiter = recruiterOpt.get();
+            recruiter.setBlocked(block);
+            recruiterRepository.save(recruiter);
+            logger.info("Recruiter with ID: {} successfully {}", recruiterId, block ? "blocked" : "unblocked");
+        } catch (Exception e) {
+            logger.error("Error updating block status for recruiter with ID {}: {}", recruiterId, e.getMessage(), e);
+            throw new BadRequestException("Failed to update block status: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateRefreshToken(Integer recruiterId, String refreshToken) {
+        logger.info("Updating refresh token for recruiter with ID: {}", recruiterId);
+
+        Optional<Recruiter> recruiterOpt = recruiterRepository.findById(recruiterId);
+        if (recruiterOpt.isEmpty()) {
+            logger.error("Cannot update refresh token: Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        try {
+            Recruiter recruiter = recruiterOpt.get();
+            recruiter.setRefreshToken(refreshToken);
+            recruiterRepository.save(recruiter);
+            logger.info("Refresh token updated successfully for recruiter with ID: {}", recruiterId);
+        } catch (Exception e) {
+            logger.error("Error updating refresh token for recruiter with ID {}: {}", recruiterId, e.getMessage(), e);
+            throw new BadRequestException("Failed to update refresh token: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public boolean verifyPassword(Integer recruiterId, String password) {
+        logger.info("Verifying password for recruiter with ID: {}", recruiterId);
+
+        Optional<Recruiter> recruiterOpt = recruiterRepository.findById(recruiterId);
+        if (recruiterOpt.isEmpty()) {
+            logger.error("Cannot verify password: Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        // In a real implementation, you would use a password encoder to verify the password
+        // This is a simplified example
+        Recruiter recruiter = recruiterOpt.get();
+        return password.equals(recruiter.getPassword());
+    }
+
+    @Override
+    public void updatePassword(Integer recruiterId, String newPassword) {
+        logger.info("Updating password for recruiter with ID: {}", recruiterId);
+
+        Optional<Recruiter> recruiterOpt = recruiterRepository.findById(recruiterId);
+        if (recruiterOpt.isEmpty()) {
+            logger.error("Cannot update password: Recruiter not found with ID: {}", recruiterId);
+            throw new NotFoundException("Recruiter not found with ID: " + recruiterId);
+        }
+
+        try {
+            Recruiter recruiter = recruiterOpt.get();
+            // In a real implementation, you would hash the password before saving
+            recruiter.setPassword(newPassword);
+            recruiterRepository.save(recruiter);
+            logger.info("Password updated successfully for recruiter with ID: {}", recruiterId);
+        } catch (Exception e) {
+            logger.error("Error updating password for recruiter with ID {}: {}", recruiterId, e.getMessage(), e);
+            throw new BadRequestException("Failed to update password: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Recruiter> searchRecruiters(String keyword) {
+        logger.info("Searching recruiters with keyword: {}", keyword);
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            logger.info("Empty search keyword, returning all recruiters");
+            return findAll();
+        }
+
+        try {
+            List<Recruiter> recruiters = recruiterRepository.findByCompanyNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+                    keyword, keyword);
+            logger.info("Found {} recruiters matching search keyword: {}", recruiters.size(), keyword);
+            return recruiters;
+        } catch (Exception e) {
+            logger.error("Error searching recruiters with keyword {}: {}", keyword, e.getMessage(), e);
+            throw new BadRequestException("Failed to search recruiters: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Recruiter> findByFilter(CompanyType companyType, BusinessSecTor businessSector,
+                                        Integer minEmployees, Integer maxEmployees) {
+        logger.info("Filtering recruiters - companyType: {}, businessSector: {}, employee range: {}-{}",
+                companyType, businessSector, minEmployees, maxEmployees);
+
+        try {
+            List<Recruiter> recruiters = recruiterRepository.findByFilters(
+                    companyType, businessSector, minEmployees, maxEmployees);
+            logger.info("Found {} recruiters matching filter criteria", recruiters.size());
+            return recruiters;
+        } catch (Exception e) {
+            logger.error("Error filtering recruiters: {}", e.getMessage(), e);
+            throw new BadRequestException("Failed to filter recruiters: " + e.getMessage());
+        }
+    }
+}

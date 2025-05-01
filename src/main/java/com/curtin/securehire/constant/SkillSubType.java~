@@ -1,0 +1,4 @@
+package com.curtin.securehire.constant;
+
+public enum SkillSubType {
+}

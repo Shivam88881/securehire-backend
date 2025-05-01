@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: securehire  # Matches the name in pom.xml
+  datasource:
+    url: jdbc:postgresql://localhost:5432/securehire  # PostgreSQL database URL
+    username: postgres  # Update with your credentials
+    password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update  # Use 'create-drop' only for testing
+    show-sql: true  # Helpful for debugging, disable in production
+
+server:
+  port: 8081  # Customize the port if needed
+
+
