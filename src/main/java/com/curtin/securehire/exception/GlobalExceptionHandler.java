@@ -127,7 +127,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",
-                "An unexpected error occurred",
+                ex.getMessage()+" "+ex.getCause()+" "+ex.getStackTrace(),
                 request.getRequestURI()
         );
 

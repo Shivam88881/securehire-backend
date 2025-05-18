@@ -1,0 +1,33 @@
+
+package com.curtin.securehire.service.db;
+
+import com.curtin.securehire.constant.ApplicationStatus;
+import com.curtin.securehire.entity.db.Application;
+import com.curtin.securehire.entity.db.Recruiter;
+
+import java.sql.Date;
+import java.util.List;
+
+public interface ApplicationService {
+    Application findById(Integer applicationId);
+    List<Application> findAll();
+    Application save(Application application);
+    Application update(Integer applicationId, Application application);
+    void delete(Integer applicationId);
+
+    // Additional functionality
+    List<Application> findByUserID(Integer userId);
+    List<Application> findByRecruiterId(Integer recruiterId);
+    List<Application> findByJobId(Integer jobId);
+    List<Application> findByStatus(ApplicationStatus status);
+    Application updateStatus(Integer applicationId, ApplicationStatus status);
+    Application assignRecruiter(Integer applicationId, Recruiter recruiter);
+    Application toggleChatAccess(Integer applicationId, boolean canChat);
+    List<Application> findApplicationsWithChatEnabled();
+    Integer countApplicationsByJob(Integer jobId);
+    List<Application> findApplicationsByDateRange(Date startDate, Date endDate);
+    List<Application> findApplicationsByJobAndDateRange(Integer jobId, Date startDate, Date endDate);
+    Integer countApplicationsByJobAndStatus(Integer jobId, ApplicationStatus status);
+    Integer countApplicationsByUser(Integer userId);
+    Integer countApplicationsByRecruiter(Integer recruiterId);
+}

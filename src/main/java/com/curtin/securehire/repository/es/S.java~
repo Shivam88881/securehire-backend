@@ -1,0 +1,4 @@
+package com.curtin.securehire.repository.es;
+
+public interface S {
+}

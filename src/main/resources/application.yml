@@ -4,15 +4,55 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/securehire  # PostgreSQL database URL
     username: postgres  # Update with your credentials
-    password: root
+    password: postgres
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update  # Use 'create-drop' only for testing
     show-sql: true  # Helpful for debugging, disable in production
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    org.springframework.jdbc: TRACE
+    org.springframework.jdbc.datasource.init: TRACE
+    org.springframework.boot.autoconfigure.jdbc: DEBUG
+
 
 server:
   port: 8081  # Customize the port if needed
 
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+jwt:
+  secret: p73NCglo4h9cXmKQg2ppX6jj7DvcTikGmqyMRXLMhHcX
+  jwt-expiration-in-ms: 900000
+  refresh-secret: Hd6YoWXVCX31LWrixfgCYa2b6uTz5JyTjEV3YkjbRCgY
+  refresh-jwt-expiration-in-ms: 8640000
+
+
+# OpenAI API Key
+openai:
+  api:
+    key: your-openai-api-key
+
+  # Vector DB Configuration (if using separate DB)
+vector:
+  db:
+    url: jdbc:postgresql://localhost:5432/securehire
+    username: postgres
+    password: postgres
+
+elasticsearch:
+  host: localhost
+  port: 9200
+  username: elastic
+  password: elastic
 
